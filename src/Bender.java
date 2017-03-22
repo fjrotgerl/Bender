@@ -12,9 +12,43 @@ public class Bender {
     }
 
     public String run() {
-        StringBuilder sb = new StringBuilder();
         char[][] array = buildArray(this.mapa);
         int[] position = startPosition(array);
+        return movePosition(position,array);
+    }
+
+    public char[][] buildArray(String mapa) {
+        String[] mapaSeparat = mapa.split("\n");
+        int X = mapaSeparat[0].length();
+        int Y = mapa.split("\n").length;
+        this.mapaBidimensional = new char[Y][X];
+        int i = 0;
+        for (int y = 0; y < Y; y++) {
+            for (int x = 0; x < X; x++) {
+                this.mapaBidimensional[y][x] = mapaSeparat[y].charAt(i++);
+            }
+            i = 0;
+        }
+        return this.mapaBidimensional;
+    }
+
+    public int[] startPosition(char[][] map) {
+        int[] position = new int[2];
+        for (int y = 0; y < map.length; y++) {
+            for (int x = 0; x < map[0].length; x++) {
+                if (map[y][x] == 'X') {
+                    position[0] = y;
+                    position[1] = x;
+                }
+            }
+        }
+        return position;
+    }
+
+    public String movePosition(int[] position, char[][] array) {
+        StringBuilder sb = new StringBuilder();
+        array = buildArray(this.mapa);
+        position = startPosition(array);
         int posX = 0;
         int posY = 0;
         int y2 = 0;
@@ -72,33 +106,5 @@ public class Bender {
             }
         }
         return sb.toString();
-    }
-
-    public char[][] buildArray(String mapa) {
-        String[] mapaSeparat = mapa.split("\n");
-        int X = mapaSeparat[0].length();
-        int Y = mapa.split("\n").length;
-        this.mapaBidimensional = new char[Y][X];
-        int i = 0;
-        for (int y = 0; y < Y; y++) {
-            for (int x = 0; x < X; x++) {
-                this.mapaBidimensional[y][x] = mapaSeparat[y].charAt(i++);
-            }
-            i = 0;
-        }
-        return this.mapaBidimensional;
-    }
-
-    public int[] startPosition(char[][] map) {
-        int[] position = new int[2];
-        for (int y = 0; y < map.length; y++) {
-            for (int x = 0; x < map[0].length; x++) {
-                if (map[y][x] == 'X') {
-                    position[0] = y;
-                    position[1] = x;
-                }
-            }
-        }
-        return position;
     }
 }
