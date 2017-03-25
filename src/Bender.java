@@ -5,31 +5,82 @@ import java.util.Arrays;
  */
 public class Bender {
     String mapa;
-    char[][] mapaBidimensional;
 
     public Bender(String mapa) {
         this.mapa = mapa;
     }
 
     public String run() {
-        char[][] array = buildArray(this.mapa);
-        int[] position = startPosition(array);
-        return movePosition(position,array);
+        StringBuilder sb = new StringBuilder();
+        char[] normal = new char[] {'S','E','N','W'};
+        char[] inverted = new char[] {'N','W','S','E'};
+        char[] movement;
+        char[][] mapaBidimensional = buildArray(this.mapa);
+        int[] position = startPosition(mapaBidimensional);
+        int[] tPosition = transportPosition(mapaBidimensional);
+        int cont = 0;
+        boolean perimetro = false;
+        boolean inverter = false;
+
+        while (true) {
+            if (inverter) { movement = inverted; }
+            else { movement = normal; }
+
+            int[] aux = movePosition(position, movement[cont]);
+            if (mapaBidimensional[aux[0]][aux[1]] == ' ' || mapaBidimensional[aux[0]][aux[1]] == 'X') {
+                position = aux;
+                perimetro = false;
+                sb.append(movement[cont]);
+                continue;
+            } if (mapaBidimensional[aux[0]][aux[1]] == '#') {
+                if (perimetro) { cont++; }
+                else {
+                    cont = 0;
+                    perimetro = true;
+                }
+                continue;
+            } if (mapaBidimensional[aux[0]][aux[1]] == 'T') {
+                if (aux[0] == tPosition[0] && aux[1] == tPosition[1] ) {
+                    position[0] = tPosition[2];
+                    position[1] = tPosition[3];
+                } else {
+                    position[0] = tPosition[0];
+                    position[1] = tPosition[1];
+                }
+                perimetro = false;
+                sb.append(movement[cont]);
+                continue;
+            } if (mapaBidimensional[aux[0]][aux[1]] == 'I') {
+                if (inverter) { inverter = false; }
+                else { inverter = true; }
+                perimetro = false;
+                position = aux;
+                sb.append(movement[cont]);
+                cont = 0;
+                continue;
+            }
+
+            if (mapaBidimensional[aux[0]][aux[1]] == '$') {
+                sb.append(movement[cont]);
+                return sb.toString();
+            }
+        }
     }
 
     public char[][] buildArray(String mapa) {
+        char[][] mapaBidimensional;
         String[] mapaSeparat = mapa.split("\n");
         int X = mapaSeparat[0].length();
         int Y = mapa.split("\n").length;
-        this.mapaBidimensional = new char[Y][X];
+        mapaBidimensional = new char[Y][X];
         int i = 0;
         for (int y = 0; y < Y; y++) {
             for (int x = 0; x < X; x++) {
-                this.mapaBidimensional[y][x] = mapaSeparat[y].charAt(i++);
+                mapaBidimensional[y][x] = mapaSeparat[y].charAt(i++);
             }
             i = 0;
         }
-        return this.mapaBidimensional;
+        return mapaBidimensional;
     }
 
     public int[] startPosition(char[][] map) {
@@ -45,66 +96,37 @@ public class Bender {
         return position;
     }
 
-    public String movePosition(int[] position, char[][] array) {
-        StringBuilder sb = new StringBuilder();
-        array = buildArray(this.mapa);
-        position = startPosition(array);
-        int posX = 0;
-        int posY = 0;
-        int y2 = 0;
-        int x2 = 0;
-        boolean south;
-        boolean east;
-        boolean north;
-        boolean west;
-        for (int y = position[0]; y < array.length; y++) {
-            for (int x = position[1]; x < array[0].length; x++) {
-                if (array[position[0]+1][position[1]] == ' ' && y == position[0] && x == position[1] ) {
-                    y2 = y+1;
-                    sb.append("S");
-                    break;
+    private static int[] transportPosition(char[][] map) {
+        int[] position = new int[4];
+        for (int y = 0; y < map.length; y++) {
+            for (int x = 0; x < map[0].length; x++) {
+                if (map[y][x] == 'T' && position[0] == 0) {
+                    position[0] = y;
+                    position[1] = x;
+                } else if (map[y][x] == 'T' && position[2] == 0) {
+                    position[2] = y;
+                    position[3] = x;
                 }
-                south = y < array.length-1 && array[y+1][x] == ' ' || y < array.length-1 && array[y+1][x] == '$';
-                if (array[y][x] == ' ') {
-                    if (south == true) {
-                        posX = x;
-                        posY = y+1;
-                        x--;
-                        sb.append("S");
-                        y2 = y+1;
-                        break;
-                    }
-                    east = array[y][x+1] == ' ' || array[y][x+1] == '$';
-                    if (east == true && south == false) {
-                        sb.append("E");
-                        posX = x+1;
-                        posY = y;
-                        x2 = x;
-                    }
-                    north = array[y2-1][x] == ' ' || array[y2-1][x] == '$';
-                    if (y2 < array.length-1 && north == true && south == false && east == false) {
-                        y2--;
-                        x--;
-                        posY = y2;
-                        posX = x+1;
-                        sb.append("N");
-                    }
-                    west = array[y][x-1] == ' ' || array[y][x-1] == '$';
-                    if (west == true && north == false && south == false && east == false) {
-                        x2--;
-                        x--;
-                        sb.append("W");
-                        posX = x2+1;
-                        posY = y2;
-                    }
-                } if (array[posY][posX] == '$') {
-                    break;
-                }
-            } if (array[posY][posX] == '$') {
-                System.out.println("Has guanyat!");
-                break;
             }
         }
-        return sb.toString();
+        return position;
+    }
+
+    public int[] movePosition(int[] position, char direction) {
+        position = Arrays.copyOf(position,2);
+        if (direction == 'S') {
+            position[0]++;
+            return position;
+        } else if (direction == 'E') {
+            position[1]++;
+            return position;
+        } else if (direction == 'N') {
+            position[0]--;
+            return position;
+        } else if (direction == 'W') {
+            position[1]--;
+            return position;
+        }
+        return null;
     }
 }
